@@ -1,0 +1,22 @@
+[
+    {
+        "name": "emacs-config",
+        "location": "/home/adrien/emacs-config",
+        "tag": "emacs"
+    },
+    {
+        "name": "KarmaJS",
+        "location": "/home/adrien/workspace/KarmaJS",
+        "tag": ""
+    },
+    {
+        "name": "abrochard.github.io",
+        "location": "/home/adrien/workspace/abrochard.github.io",
+        "tag": "website"
+    },
+    {
+        "name": "KarmaJS",
+        "location": "/home/adrien/workspace/abrochard.github.io/KarmaJS",
+        "tag": "website"
+    }
+]
