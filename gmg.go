@@ -94,8 +94,26 @@ func unregisterRepo(path string, repos []Repo) {
 	}
 }
 
+func validTag(str string) bool {
+	return string(str[0]) == "@" && len(str) > 1
+}
+
 func printHelp() {
-	fmt.Println("Usage")
+	fmt.Println("Usage: gmg [@tag] <comand> [<args>]")
+	fmt.Println("")
+	fmt.Println("Go-many-git basic usage is to run a particular git command across multiple repos")
+	fmt.Println("For example, 'gmg pull' runs 'git pull' across all registered repos")
+	fmt.Println("By default 'gmg' alone runs 'git status'")
+	fmt.Println("")
+	fmt.Println("Optionally, a repos can be identified by a shared tag (@example), making it possible to target a subset of repos")
+	fmt.Println("")
+	fmt.Println("Go-many-git accepts all git commands, but here are a few gmg specific commands:")
+	fmt.Println("")
+	fmt.Println("   register <path> [@tag]    Add the repo in <path> to the list of repos, with an optional tag")
+	fmt.Println("   unregister <path>         Remove the repo in <path> from the list")
+	fmt.Println("   help                      Print this help")
+	fmt.Println("")
+	fmt.Println("See README.md for more details")
 }
 
 func main() {
@@ -105,8 +123,13 @@ func main() {
 
 	if len(args) == 0 {
 		args = []string{"status"}
-	} else if string(args[0][0]) == "@" {
-		tag, args = args[0][1:], args[1:]
+	} else if validTag(args[0]) {
+		tag = args[0][1:] // scrub off the "@"
+		if len(args) == 1 {
+			args = []string{"status"}
+		} else {
+			args = args[1:]
+		}
 	}
 	cmd := args[0]
 
@@ -120,16 +143,24 @@ func main() {
 
 	switch cmd {
 	case "register":
+		// Add this repo to the list
 		path, _ := filepath.Abs(args[1])
 		registerRepo(path, tag, repos)
 	case "unregister":
+		// Remove this repo from the list
 		path, _ := filepath.Abs(args[1])
 		unregisterRepo(path, repos)
 	case "help":
+		// Print help
+		printHelp()
 	case "--help":
+		// Print help
+		printHelp()
 	case "-h":
+		// Print help
 		printHelp()
 	default:
+		// Generic git command
 		runCmd(repos, tag, args...)
 	}
 
