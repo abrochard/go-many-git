@@ -94,8 +94,15 @@ func unregisterRepo(path string, repos []Repo) {
 	}
 }
 
-func validTag(str string) bool {
-	return string(str[0]) == "@" && len(str) > 1
+func printRepos(tag string, repos []Repo) {
+	for _, r := range repos {
+		if tag == "" || (tag != "" && r.Tag != "" && tag == r.Tag) {
+			fmt.Printf("Name: %s\n", r.Name)
+			fmt.Printf("Location: %s\n", r.Location)
+			fmt.Printf("Tag: %s\n", r.Tag)
+			fmt.Println("")
+		}
+	}
 }
 
 func printHelp() {
@@ -111,14 +118,17 @@ func printHelp() {
 	fmt.Println("")
 	fmt.Println("   register <path> [@tag]    Add the repo in <path> to the list of repos, with an optional tag")
 	fmt.Println("   unregister <path>         Remove the repo in <path> from the list")
+	fmt.Println("   list                      Print all registered repos")
 	fmt.Println("   help                      Print this help")
 	fmt.Println("")
 	fmt.Println("See README.md for more details")
 }
 
-func main() {
+func validTag(str string) bool {
+	return string(str[0]) == "@" && len(str) > 1
+}
 
-	args := os.Args[1:]
+func parseArgs(args []string) (string, []string) {
 	tag := ""
 
 	if len(args) == 0 {
@@ -131,6 +141,12 @@ func main() {
 			args = args[1:]
 		}
 	}
+
+	return tag, args
+}
+
+func main() {
+	tag, args := parseArgs(os.Args[1:])
 	cmd := args[0]
 
 	repos := getRepos()
@@ -150,6 +166,8 @@ func main() {
 		// Remove this repo from the list
 		path, _ := filepath.Abs(args[1])
 		unregisterRepo(path, repos)
+	case "list":
+		printRepos(tag, repos)
 	case "help":
 		// Print help
 		printHelp()
