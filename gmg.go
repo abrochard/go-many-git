@@ -19,12 +19,17 @@ type Repo struct {
 	Tag      string `json:"tag"`
 }
 
+func check(err error, message string) {
+	if err != nil {
+		fmt.Println(message)
+		panic(err)
+	}
+}
+
 func createConfigFile() {
 	data := []byte("[]\n")
 	err := ioutil.WriteFile(CONFIG_FILE, data, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err, "Failed to create config file")
 }
 
 func getRepos() []Repo {
@@ -35,11 +40,7 @@ func getRepos() []Repo {
 	}
 
 	raw, err := ioutil.ReadFile(CONFIG_FILE)
-	if err != nil {
-		fmt.Println("Config file not found")
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
+	check(err, "Config file not found")
 
 	var c []Repo
 	json.Unmarshal(raw, &c)
@@ -47,7 +48,7 @@ func getRepos() []Repo {
 }
 
 func saveRepos(repos []Repo) {
-	bytes, err := json.Marshal(repos)
+	bytes, err := json.MarshalIndent(repos, "", "   ")
 
 	if err != nil {
 		log.Fatal(err)
@@ -55,10 +56,7 @@ func saveRepos(repos []Repo) {
 	}
 
 	err = ioutil.WriteFile(CONFIG_FILE, bytes, 0644)
-
-	if err != nil {
-		panic(err)
-	}
+	check(err, "Failed to save repos to config file")
 }
 
 func runCmd(repos []Repo, tag string, args ...string) {
@@ -68,16 +66,17 @@ func runCmd(repos []Repo, tag string, args ...string) {
 			params = append(params, args...)
 			color.Cyan(r.Name)
 			out, err := exec.Command("git", params...).Output()
-			if err != nil {
-				log.Fatal(err)
-			}
+			check(err, "Failed to execute command")
 			fmt.Printf("%s\n", out)
 		}
 	}
 }
 
-func registerRepo(location string, repos []Repo) {
-
+func registerRepo(location string, tag string, repos []Repo) {
+	name := filepath.Base(location)
+	r := Repo{Name: name, Location: location, Tag: tag}
+	repos = append(repos, r)
+	saveRepos(repos)
 }
 
 func unregisterRepo(path string, repos []Repo) {
@@ -109,36 +108,29 @@ func main() {
 	} else if string(args[0][0]) == "@" {
 		tag, args = args[0][1:], args[1:]
 	}
+	cmd := args[0]
 
 	repos := getRepos()
-	if len(repos) == 0 {
+	if len(repos) == 0 && cmd != "register" {
 		fmt.Println("No repositories registered. Nothing to do.")
 		fmt.Println("Please register a repository with the command:")
 		fmt.Println("gmg register [path]")
 		os.Exit(0)
 	}
-	cmd := args[0]
 
 	switch cmd {
-	case "status":
-		runCmd(repos, tag, args...)
-	case "pull":
-		runCmd(repos, tag, args...)
-	case "push":
-		runCmd(repos, tag, args...)
-	case "cmd":
-		args = args[1:] // Shift out the "cmd"
-		runCmd(repos, tag, args...)
 	case "register":
 		path, _ := filepath.Abs(args[1])
-		registerRepo(path, repos)
+		registerRepo(path, tag, repos)
 	case "unregister":
 		path, _ := filepath.Abs(args[1])
 		unregisterRepo(path, repos)
 	case "help":
+	case "--help":
+	case "-h":
 		printHelp()
 	default:
-		printHelp()
+		runCmd(repos, tag, args...)
 	}
 
 }
