@@ -1,4 +1,4 @@
-package gmg
+package main
 
 import (
 	"encoding/json"
