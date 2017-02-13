@@ -116,7 +116,7 @@ func printHelp() {
 	fmt.Println("")
 	fmt.Println("Go-many-git accepts all git commands, but here are a few gmg specific commands:")
 	fmt.Println("")
-	fmt.Println("   register <path> [@tag]    Add the repo in <path> to the list of repos, with an optional tag")
+	fmt.Println("   [@tag] register <path>    Add the repo in <path> to the list of repos, with an optional tag")
 	fmt.Println("   unregister <path>         Remove the repo in <path> from the list")
 	fmt.Println("   list                      Print all registered repos")
 	fmt.Println("   help                      Print this help")
