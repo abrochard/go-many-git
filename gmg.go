@@ -8,10 +8,11 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 )
 
-const CONFIG_FILE = "./repos.json"
+var CONFIG_FILE = "/.config/gmg-repos.json"
 
 type Repo struct {
 	Name     string `json:"name"`
@@ -24,6 +25,12 @@ func check(err error, message string) {
 		fmt.Println(message)
 		panic(err)
 	}
+}
+
+func setConfigFilePath() {
+	usr, err := user.Current()
+	check(err, "Error getting the current user")
+	CONFIG_FILE = usr.HomeDir + CONFIG_FILE
 }
 
 func createConfigFile() {
@@ -146,6 +153,8 @@ func parseArgs(args []string) (string, []string) {
 }
 
 func main() {
+	setConfigFilePath()
+
 	tag, args := parseArgs(os.Args[1:])
 	cmd := args[0]
 

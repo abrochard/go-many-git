@@ -1,6 +1,13 @@
 # go-many-git
 Tool to manage multiple git repositories
 
+## Installation
+```
+go get -u github.com/abrochard/go-many-git
+go install github.com/abrochard/go-many-git
+echo 'alias gmg=$GOPATH/bin/go-many-git' >> ~/.bashrc
+```
+
 ## Usage
 ```
 Usage: gmg [@tag] <comand> [<args>]
