@@ -139,6 +139,7 @@ func printHelp() {
 	fmt.Println("")
 	fmt.Println("   [@tag] register <path>    Add the repo in <path> to the list of repos, with an optional tag")
 	fmt.Println("   unregister <path>         Remove the repo in <path> from the list")
+	fmt.Println("   [@tag] b                  Shorthand to display the repos current branch")
 	fmt.Println("   list                      Print all registered repos")
 	fmt.Println("   help                      Print this help")
 	fmt.Println("")
@@ -195,6 +196,10 @@ func main() {
 	case "list":
 		// List repos
 		printRepos(tag, repos)
+	case "b":
+		// List branches short
+		args = []string{"rev-parse", "--abbrev-ref", "HEAD"}
+		runCmd(repos, tag, args...)
 	case "help":
 		// Print help
 		printHelp()
