@@ -26,7 +26,8 @@ type Repo struct {
 func check(err error, message string) {
 	if err != nil {
 		fmt.Println(message)
-		panic(err)
+		log.Fatal(err)
+		os.Exit(1)
 	}
 }
 
