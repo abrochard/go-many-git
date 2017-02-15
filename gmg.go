@@ -115,7 +115,8 @@ func unregisterRepo(path string, repos []Repo) {
 func printRepos(tag string, repos []Repo) {
 	for _, r := range repos {
 		if tag == "" || (tag != "" && r.Tag != "" && tag == r.Tag) {
-			fmt.Printf("Name: %s\n", r.Name)
+			fmt.Printf("Name: ")
+			color.Cyan("%s", r.Name)
 			fmt.Printf("Location: %s\n", r.Location)
 			fmt.Printf("Tag: %s\n", r.Tag)
 			fmt.Println("")
