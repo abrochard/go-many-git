@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
@@ -25,8 +26,9 @@ type Repo struct {
 // Check for errors, print message and panic if needed
 func check(err error, message string) {
 	if err != nil {
-		fmt.Println(message)
 		log.Fatal(err)
+		fmt.Println(err)
+		fmt.Println(message)
 		os.Exit(1)
 	}
 }
@@ -80,10 +82,20 @@ func runCmd(repos []Repo, tag string, args ...string) {
 		if tag == "" || (tag != "" && r.Tag != "" && tag == r.Tag) {
 			params := []string{"-C", r.Location}
 			params = append(params, args...)
+			cmd := exec.Command("git", params...)
+			var out bytes.Buffer
+			var stderr bytes.Buffer
+			cmd.Stdout = &out
+			cmd.Stderr = &stderr
+
 			color.Cyan(r.Name)
-			out, err := exec.Command("git", params...).Output()
-			check(err, "Failed to execute command")
-			fmt.Printf("%s\n", out)
+			err := cmd.Run()
+
+			if err != nil {
+				fmt.Println(stderr.String())
+			}
+
+			fmt.Printf("%s\n", out.String())
 		}
 	}
 }

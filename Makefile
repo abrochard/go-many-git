@@ -1,13 +1,13 @@
 BINARY=gmg
 
 build:
+	go get github.com/fatih/color
 	go build -o ${BINARY}
 
 install:
-	go get github.com/fatih/color
-	go build -o ${BINARY}
+	cp gmg /usr/bin/gmg
 
 clean:
 	if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi
 
-.PHONY: clean install
+.PHONY: build clean install

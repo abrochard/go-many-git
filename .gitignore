@@ -23,3 +23,4 @@ _testmain.go
 *.test
 *.prof
 /repos.json
+/gmg
