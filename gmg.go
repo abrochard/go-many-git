@@ -102,6 +102,8 @@ func runCmd(repos []Repo, tag string, args ...string) {
 
 // Add a new repo to the list
 func registerRepo(location string, tag string, repos []Repo) {
+	_, err := os.Stat(location)
+	check(err, "Invalid path")
 	name := filepath.Base(location)
 	r := Repo{Name: name, Location: location, Tag: tag}
 	repos = append(repos, r)
@@ -200,6 +202,11 @@ func main() {
 	switch cmd {
 	case "register":
 		// Add this repo to the list
+		if len(args) == 1 {
+			fmt.Println("No path supplied")
+			fmt.Println("gmg register [path]")
+			os.Exit(1)
+		}
 		path, _ := filepath.Abs(args[1])
 		registerRepo(path, tag, repos)
 	case "unregister":
