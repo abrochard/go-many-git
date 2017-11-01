@@ -32,3 +32,6 @@ Go-many-git accepts all git commands, but here are a few gmg specific commands:
    help                      Print this help
 ```
 Note that gmg writes its repo list to a config file located under `~/.config/gmg-repos.json`
+
+## Acknowledgements
+gmg is very inspired by the amazing [mr](https://myrepos.branchable.com) and [gr](https://github.com/mixu/gr) tools. A big thanks to them.
