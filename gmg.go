@@ -80,9 +80,16 @@ func saveRepos(repos []Repo) {
 func runCmd(repos []Repo, tag string, args ...string) {
 	for _, r := range repos {
 		if tag == "" || (tag != "" && r.Tag != "" && tag == r.Tag) {
-			params := []string{"-C", r.Location}
-			params = append(params, args...)
-			cmd := exec.Command("git", params...)
+			var cmd *exec.Cmd
+
+			if args[0] == "-exec" {
+				cmd = exec.Command(args[1], args[2:]...)
+			} else {
+				params := []string{"-C", r.Location}
+				params = append(params, args...)
+				cmd = exec.Command("git", params...)
+			}
+
 			var out bytes.Buffer
 			var stderr bytes.Buffer
 			cmd.Stdout = &out
@@ -150,11 +157,14 @@ func printHelp() {
 	fmt.Println("Optionally, a repos can be identified by a shared tag (@example), making it possible to target a subset of repos")
 	fmt.Println("ie: `gmg @api pull` runs `git pull` on all repos tagged with `api`")
 	fmt.Println("")
+	fmt.Println("Arbitrary non-git commands can be run by using the -exec flag")
+	fmt.Println("")
 	fmt.Println("Go-many-git accepts all git commands, but here are a few gmg specific commands:")
 	fmt.Println("")
 	fmt.Println("   [@tag] register <path>    Add the repo in <path> to the list of repos, with an optional tag")
 	fmt.Println("   unregister <path>         Remove the repo in <path> from the list")
 	fmt.Println("   [@tag] b                  Shorthand to display the repos current branch")
+	fmt.Println("   [@tag] -exec ls           Execute non-git command ls on each repo")
 	fmt.Println("   list                      Print all registered repos")
 	fmt.Println("   help                      Print this help")
 	fmt.Println("")
