@@ -1,16 +1,20 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/olekukonko/tablewriter"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 // Location of the config file under the $HOME dir
@@ -163,6 +167,7 @@ func printHelp() {
 	fmt.Println("")
 	fmt.Println("   [@tag] register <path>    Add the repo in <path> to the list of repos, with an optional tag")
 	fmt.Println("   unregister <path>         Remove the repo in <path> from the list")
+	fmt.Println("   [@tag] -table-status      Will output the name, branch, and status of each repo in a table")
 	fmt.Println("   [@tag] b                  Shorthand to display the repos current branch")
 	fmt.Println("   [@tag] -exec ls           Execute non-git command ls on each repo")
 	fmt.Println("   list                      Print all registered repos")
@@ -219,6 +224,8 @@ func main() {
 		}
 		path, _ := filepath.Abs(args[1])
 		registerRepo(path, tag, repos)
+	case "-table-status":
+		tableStatus(repos, tag)
 	case "unregister":
 		// Remove this repo from the list
 		path, _ := filepath.Abs(args[1])
@@ -243,5 +250,171 @@ func main() {
 		// Generic git command
 		runCmd(repos, tag, args...)
 	}
+
+}
+
+func tableStatus(repos []Repo, tag string) {
+	var statusData [][]string
+
+	var errorData [][]string
+
+	for _, r := range repos {
+		if tag == "" || (tag != "" && r.Tag != "" && tag == r.Tag) {
+
+			entry := []string{r.Name, "", "", "", r.Location}
+
+			branch, err := getCurrentBranch(r.Location)
+
+			if err != nil {
+				errNum := strconv.Itoa(len(errorData) + 1)
+				errorData = append(errorData, []string{errNum, err.Error(), err.StdErr.String()})
+				branch = "See Error: " + errNum
+			}
+
+			entry[1] = branch
+
+			stagedStatus, unstagedStatus, err := getStatus(r.Location)
+
+			if err != nil {
+				errNum := strconv.Itoa(len(errorData) + 1)
+				errorData = append(errorData, []string{errNum, err.Error(), err.StdErr.String()})
+				stagedStatus = "See Error: " + errNum
+				unstagedStatus = "See Error: " + errNum
+			}
+
+			entry[2] = stagedStatus
+			entry[3] = unstagedStatus
+
+			statusData = append(statusData, entry)
+		}
+	}
+
+	statusTable := tablewriter.NewWriter(os.Stdout)
+	statusTable.SetHeader([]string{"Name", "Branch", "Staged", "Unstaged", "Location"})
+	statusTable.SetColumnAlignment([]int{tablewriter.ALIGN_DEFAULT, tablewriter.ALIGN_DEFAULT, tablewriter.ALIGN_CENTER, tablewriter.ALIGN_CENTER, tablewriter.ALIGN_DEFAULT})
+	statusTable.SetColumnColor(tablewriter.Colors{},tablewriter.Colors{},tablewriter.Colors{tablewriter.FgHiGreenColor},tablewriter.Colors{tablewriter.FgHiRedColor},tablewriter.Colors{})
+	for _, data := range statusData {
+		statusTable.Append(data)
+	}
+	statusTable.Render()
+
+	errTable := tablewriter.NewWriter(os.Stdout)
+	errTable.SetHeader([]string{"Error Number", "Message", "StdErr"})
+
+	for _, data := range errorData {
+		errTable.Append(data)
+	}
+	errTable.Render()
+}
+
+type StdOutErr struct {
+	StdErr bytes.Buffer
+	Err    error
+}
+
+func (err *StdOutErr) Error() string {
+	return err.Err.Error()
+}
+
+func getCurrentBranch(location string) (string, *StdOutErr) {
+	params := []string{"-C", location, "rev-parse", "--abbrev-ref", "HEAD"}
+	cmd := exec.Command("git", params...)
+
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+
+	if err != nil {
+		return "", &StdOutErr{
+			StdErr: stderr,
+			Err:    err,
+		}
+	}
+
+	return strings.TrimSpace(out.String()), nil
+}
+
+func getStatus(location string) (string, string, *StdOutErr) {
+	params := []string{"-C", location, "status", "--porcelain=v2"}
+
+	cmd := exec.Command("git", params...)
+
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+
+	if err != nil {
+		return "", "", &StdOutErr{
+			StdErr: stderr,
+			Err:    err,
+		}
+	}
+	staged, notStaged := parseStatus(&out)
+
+	return staged, notStaged, nil
+}
+
+func parseStatus(statusBuffer *bytes.Buffer) (string, string) {
+	if statusBuffer.Len() == 0 {
+		return "", ""
+	}
+
+	scanner := bufio.NewScanner(statusBuffer)
+
+	stagedDeletes := 0
+	notStagedDeletes := 0
+
+	stagedModifies := 0
+	notStagedModifies := 0
+
+	stagedNew := 0
+	notStagedNew := 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		values := strings.Split(line, " ")
+
+		if values[0] == "?" {
+			notStagedNew++
+			break
+		}
+
+		switch values[1] {
+		case "D.":
+			stagedDeletes++
+		case ".D":
+			notStagedDeletes++
+		case "M.":
+			stagedModifies++
+		case ".M":
+			notStagedModifies++
+		case "R.":
+			stagedModifies++
+		case ".R":
+			notStagedModifies++
+		case "A.":
+			stagedNew++
+		}
+	}
+
+	stagedStr := ""
+
+	if stagedNew != 0 || stagedModifies != 0 || stagedDeletes != 0 {
+		stagedStr = fmt.Sprintf("+%d ~%d -%d", stagedNew, stagedModifies, stagedDeletes)
+	}
+
+	notStagedStr := ""
+
+	if notStagedNew != 0 || notStagedModifies != 0 || notStagedDeletes != 0 {
+		notStagedStr = fmt.Sprintf("+%d ~%d -%d", notStagedNew, notStagedModifies, notStagedDeletes)
+	}
+
+	return stagedStr, notStagedStr
 
 }

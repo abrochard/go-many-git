@@ -29,6 +29,7 @@ Go-many-git accepts all git commands, but here are a few gmg specific commands:
 
    [@tag] register <path>    Add the repo in <path> to the list of repos, with an optional tag
    unregister <path>         Remove the repo in <path> from the list
+   [@tag] -table-status      Will output the name, branch, and status of each repo in a table
    [@tag] b                  Shorthand to display the repos current branch
    [@tag] -exec ls           Run the non-git command ls on each repo
    list                      Print all registered repos
