@@ -1,0 +1,7 @@
+.mod text eol=lf 
+.sum text eol=lf 
+.go  text eol=lf
+.md  text eol=lf
+.iml text eol=lf 
+.xml text eol=lf 
+.yml text eol=lf
