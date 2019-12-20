@@ -224,7 +224,9 @@ func main() {
 		}
 		path, _ := filepath.Abs(args[1])
 		registerRepo(path, tag, repos)
-	case "-table-status":
+	case "table-status":
+		tableStatus(repos, tag)
+	case "ts":
 		tableStatus(repos, tag)
 	case "unregister":
 		// Remove this repo from the list
@@ -298,13 +300,15 @@ func tableStatus(repos []Repo, tag string) {
 	}
 	statusTable.Render()
 
-	errTable := tablewriter.NewWriter(os.Stdout)
-	errTable.SetHeader([]string{"Error Number", "Message", "StdErr"})
+	if len(errorData) > 0 {
+		errTable := tablewriter.NewWriter(os.Stdout)
+		errTable.SetHeader([]string{"Error Number", "Message", "StdErr"})
 
-	for _, data := range errorData {
-		errTable.Append(data)
+		for _, data := range errorData {
+			errTable.Append(data)
+		}
+		errTable.Render()
 	}
-	errTable.Render()
 }
 
 type StdOutErr struct {
