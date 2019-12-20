@@ -2,8 +2,7 @@
 Tool to manage multiple git repositories
 
 ## Requirements
-- Proper go installation with GOPATH set
-- git >= 1.8.5
+- git >= 1.12
 
 ## Installation
 ```
