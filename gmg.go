@@ -263,9 +263,10 @@ func tableStatus(repos []Repo, tag string) {
 	for _, r := range repos {
 		if tag == "" || (tag != "" && r.Tag != "" && tag == r.Tag) {
 
-			entry := []string{r.Name, "", "", "", r.Location}
+			entry := []string{r.Name, "", "", "", "", r.Location}
 
 			branch, err := getCurrentBranch(r.Location)
+
 
 			if err != nil {
 				errNum := strconv.Itoa(len(errorData) + 1)
@@ -273,7 +274,14 @@ func tableStatus(repos []Repo, tag string) {
 				branch = "See Error: " + errNum
 			}
 
+			tag, _ := getCurrentTag(r.Location)
+
+			if tag == "" {
+				tag, _ = getCurrentCommit(r.Location)
+			}
+
 			entry[1] = branch
+			entry[2] = tag
 
 			stagedStatus, unstagedStatus, err := getStatus(r.Location)
 
@@ -284,17 +292,18 @@ func tableStatus(repos []Repo, tag string) {
 				unstagedStatus = "See Error: " + errNum
 			}
 
-			entry[2] = stagedStatus
-			entry[3] = unstagedStatus
+			entry[3] = stagedStatus
+			entry[4] = unstagedStatus
 
 			statusData = append(statusData, entry)
 		}
 	}
 
 	statusTable := tablewriter.NewWriter(os.Stdout)
-	statusTable.SetHeader([]string{"Name", "Branch", "Staged", "Unstaged", "Location"})
-	statusTable.SetColumnAlignment([]int{tablewriter.ALIGN_DEFAULT, tablewriter.ALIGN_DEFAULT, tablewriter.ALIGN_CENTER, tablewriter.ALIGN_CENTER, tablewriter.ALIGN_DEFAULT})
-	statusTable.SetColumnColor(tablewriter.Colors{},tablewriter.Colors{},tablewriter.Colors{tablewriter.FgHiGreenColor},tablewriter.Colors{tablewriter.FgHiRedColor},tablewriter.Colors{})
+	statusTable.SetHeader([]string{"Name", "Branch", "Tag", "Staged", "Unstaged", "Location"})
+	statusTable.SetColumnAlignment([]int{tablewriter.ALIGN_DEFAULT, tablewriter.ALIGN_DEFAULT, tablewriter.ALIGN_DEFAULT, tablewriter.ALIGN_CENTER, tablewriter.ALIGN_CENTER, tablewriter.ALIGN_DEFAULT})
+	statusTable.SetColumnColor(tablewriter.Colors{},tablewriter.Colors{}, tablewriter.Colors{}, tablewriter.Colors{tablewriter.FgHiGreenColor},tablewriter.Colors{tablewriter.FgHiRedColor},tablewriter.Colors{})
+
 	for _, data := range statusData {
 		statusTable.Append(data)
 	}
@@ -322,6 +331,48 @@ func (err *StdOutErr) Error() string {
 
 func getCurrentBranch(location string) (string, *StdOutErr) {
 	params := []string{"-C", location, "rev-parse", "--abbrev-ref", "HEAD"}
+	cmd := exec.Command("git", params...)
+
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+
+	if err != nil {
+		return "", &StdOutErr{
+			StdErr: stderr,
+			Err:    err,
+		}
+	}
+
+	return strings.TrimSpace(out.String()), nil
+}
+
+func getCurrentTag(location string) (string, *StdOutErr){
+	params := []string{"-C", location, "describe", "--abbrev=0"}
+	cmd := exec.Command("git", params...)
+
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+
+	if err != nil {
+		return "", &StdOutErr{
+			StdErr: stderr,
+			Err:    err,
+		}
+	}
+
+	return strings.TrimSpace(out.String()), nil
+}
+
+func getCurrentCommit(location string) (string, *StdOutErr){
+	params := []string{"-C", location, "rev-parse", "--short", "HEAD"}
 	cmd := exec.Command("git", params...)
 
 	var out bytes.Buffer
