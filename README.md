@@ -1,30 +1,34 @@
-# go-many-git
-Tool to manage multiple git repositories
+# ziti-git
+A tool to manage multiple repositories with special considerations for the github.com/openziti project
 
 ## Requirements
-- git >= 1.12
+- git >= 1.14
 
 ## Installation
 ```
-go get -u github.com/abrochard/go-many-git
-go install github.com/abrochard/go-many-git
-echo 'alias gmg=$GOPATH/bin/go-many-git' >> ~/.bashrc
+go get -u github.com/andrewpmartinez/ziti-git
+go install github.com/andrewpmartinez/ziti-git
+```
+
+## Alias to `zg`
+```
+echo 'alias zg=$GOPATH/bin/ziti-git' >> ~/.bashrc
 ```
 
 ## Usage
 ```
-Usage: gmg [@tag] <comand> [<args>]
+Usage: ziti-git [@tag] <comand> [<args>]
 
-Go-many-git basic usage is to run a particular git command across multiple repos
-For example, 'gmg pull' runs 'git pull' across all registered repos
-By default 'gmg' alone runs 'git status'
+`ziti-git` basic usage is to run a particular git command across multiple repos
+For example, 'ziti-git pull' runs 'git pull' across all registered repos
+By default 'ziti-git' alone runs 'git status'
 
 Additionally, arbitrary non-git commands can be run by specifying the `-exec` flag.
 
 Optionally, a repos can be identified by a shared tag (@example), making it possible to target a subset of repos
-ie: `gmg @api pull` runs `git pull` on all repos tagged with `api`
+ie: `ziti-git @api pull` runs `git pull` on all repos tagged with `api`
 
-Go-many-git accepts all git commands, but here are a few gmg specific commands:
+ziti-git accepts all git commands, but here are a few ziti-git specific commands:
 
    [@tag] register <path>    Add the repo in <path> to the list of repos, with an optional tag
    unregister <path>         Remove the repo in <path> from the list
@@ -35,7 +39,9 @@ Go-many-git accepts all git commands, but here are a few gmg specific commands:
    list                      Print all registered repos
    help                      Print this help
 ```
-Note that gmg writes its repo list to a config file located under `~/.config/gmg-repos.json`
+Note that ziti-git writes its repo list to a config file located under `~/.config/zg-repos.json`
 
 ## Acknowledgements
-gmg is very inspired by the amazing [mr](https://myrepos.branchable.com) and [gr](https://github.com/mixu/gr) tools. A big thanks to them.
+Ziti Git is based off of [gmg](https://github.com/abrochard/go-many-git) which in turn was inspired by the amazing [mr](https://myrepos.branchable.com) and [gr](https://github.com/mixu/gr) tools.
+
+A big thanks to all.

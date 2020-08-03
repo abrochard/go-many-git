@@ -1,4 +1,4 @@
-module github.com/andrewpmartinez/go-many-git
+module github.com/andrewpmartinez/ziti-git
 
 go 1.13
 
